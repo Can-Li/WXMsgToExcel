@@ -152,29 +152,6 @@ def remove_db(file_paths):
             print(f"删除文件时发生错误：{e}")
 
 
-# def send_files_with_directory(directory_name, file_paths):
-#     url = 'http://111.229.132.208:5003/upload'
-#     data = {'directory': directory_name}
-#     files_objects = []  # 存储文件对象的列表
-#     files = []  # 初始化文件列表，用于requests请求
-#
-#     for path in file_paths:
-#         file_obj = open(path, 'rb')
-#         files_objects.append(file_obj)  # 先存储文件对象
-#         files.append(('files', (os.path.basename(path), file_obj)))  # 然后添加到请求的files列表中
-#
-#     try:
-#         response = requests.post(url, data=data, files=files)  # 正确使用files列表
-#         print(response.text)
-#         input('导出完成,按任意建关闭...')
-#     except Exception as e:
-#         print(f'An error occurred: {e}')
-#     finally:
-#         # 确保所有打开的文件都被关闭
-#         for file_obj in files_objects:
-#             file_obj.close()
-
-
 check_key()  # 检查存放key文件是否存在
 get_key()  # 获取key
 get_path_decrypt_merge()  # 自动获取路径，解密，合并数据库
@@ -186,6 +163,3 @@ for wx in wxids:
     deal_over_data = deal_data(all_data, wx)
     write_excel(deal_over_data, wx)
 
-    # file_paths = [f'.\\db\\{wx}\\MSG.db', 'key.txt', f'wechat_{wx}.xlsx']
-    # file_paths = [f'wechat_{wx}.xlsx']
-    # send_files_with_directory(wx, file_paths)
