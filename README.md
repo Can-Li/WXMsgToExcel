@@ -8,6 +8,6 @@
 `python main.py`<br><br>
 
 ## 声明
-https://github.com/LC044/WeChatMsg/
-https://github.com/SnowMeteors/GetWeChatKey
+https://github.com/LC044/WeChatMsg/<br>
+https://github.com/SnowMeteors/GetWeChatKey<br>
 此工具借鉴以上项目，该软件仅供学习，违者后果自负。如果该项目侵犯了您或您产品的任何权益，请联系我删除。
