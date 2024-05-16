@@ -7,6 +7,8 @@
 `pip install -r requirements.txt`<br>
 `python main.py`<br><br>
 
+如未安装python环境，可下载打包后的release版本。
+
 ## 声明
 https://github.com/LC044/WeChatMsg/<br>
 https://github.com/SnowMeteors/GetWeChatKey<br>
