@@ -159,7 +159,11 @@ get_path_decrypt_merge()  # 自动获取路径，解密，合并数据库
 # 导出为excel
 wxids = get_wxid()
 for wx in wxids:
-    all_data = get_data(wx)
+    try:
+        all_data = get_data(wx)
+    except Exception as e:
+        print(e)
+        continue
     deal_over_data = deal_data(all_data, wx)
     write_excel(deal_over_data, wx)
 
