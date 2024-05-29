@@ -69,7 +69,7 @@ def get_wxid():
 def get_data(wxidnum):
     conn = sqlite3.connect(f'db\\{wxidnum}\\MSG.db')
     cursor = conn.execute('''
-    SELECT a.localId, a.CreateTime, a.IsSender, a.StrContent, a.StrTalker, b.Remark, b.NickName, a.BytesExtra, a.Type, a.SubType 
+    SELECT a.localId, a.CreateTime, a.IsSender, a.StrContent, a.StrTalker, b.Remark, b.NickName, a.BytesExtra, a.Type, a.SubType, a.CompressContent 
     FROM msg a 
     JOIN Contact b ON a.StrTalker = b.UserName
     ORDER BY a.localId ASC;
@@ -78,7 +78,7 @@ def get_data(wxidnum):
     print("正在读取数据库...")
     db_all = []
     for row in cursor:
-        db_all.append(row)
+        db_all.append(list(row))
     return db_all
 
 
@@ -100,7 +100,7 @@ def deal_data(db_all, wxidnum):
     contact_data = get_contact(wxidnum)
     print("数据库读取完成,开始处理数据...")
     for row in tqdm(db_all):
-        row_list = list(row)
+        row_list = row
         row_list[1] = datetime.fromtimestamp(row_list[1]).strftime("%Y-%m-%d %H:%M:%S")  # 将时间戳转为时间
         if '@chatroom' in row[4]:
             if row[2] == 1:
@@ -133,23 +133,31 @@ def deal_data(db_all, wxidnum):
         if row_list[8] == '系统提示':
             row_list[7] = ''
         row_list.pop()
+        row_list.pop()
         all_data_list.append(row_list)
     return all_data_list
 
 
 def write_excel(data, wxidnum):
-    print('数据处理完毕,开始导出数据...')
+    print('数据处理完毕,开始写入数据...')
     workbook = openpyxl.Workbook()
+    hyperlink = workbook.active
     sheet = workbook['Sheet']
     sheet.append(['序号', '时间', '发送人', '消息内容', '发送人微信号', '备注', '昵称', '消息发送者', '消息类型'])
     for i in tqdm(range(len(data))):
         try:
+            if data[i][8] == '文件':  # 为文件格式时改为超链接
+                hyperlink_cell = 'D' + str(i + 2)  # D列i行改为超链接,从0开始，且第一行为表头,所以加2
+                hyperlink[hyperlink_cell].hyperlink = data[i][3]
             data[i][3] = re.sub('[\x00-\x1f\x7f]', '', data[i][3])
-            sheet.append(data[i])
+            # sheet.append(data[i+1])
+            for j in range(len(data[i])):
+                sheet.cell(row=i + 2, column=j + 1, value=data[i][j])
         except Exception as e:
             print('异常数据', e, data[i][3])
+
+    print('数据写入完成,正在导出excel，请稍后...')
     workbook.save(f'wechat_{wxidnum}.xlsx')
-    input('导出完成,按任意建关闭...')
 
 
 if __name__ == '__main__':

@@ -1,9 +1,8 @@
-import os
-import requests
 from script.get_wechat_key import Wechat
 from script.decrypt import decrypt
 from script.merge import merge_databases
 from script.merge_table import merge_table
+from script.compress_content import file
 from export_excel import *
 import pymem.process
 from pymem import Pymem
@@ -56,7 +55,7 @@ def get_key():
         exit(0)
 
 
-def get_path_decrypt_merge():
+def get_wx_location():
     # 获取当前用户名
     users = os.path.expandvars('$HOMEPATH')
 
@@ -69,6 +68,11 @@ def get_path_decrypt_merge():
         wx_location = 'C:' + users + '\\Documents\\WeChat Files'
     else:
         wx_location = f + "\\WeChat Files"
+    return wx_location
+
+
+def get_path_decrypt_merge():
+    wx_location = get_wx_location()
 
     # 列出目录下所有文件夹
     for folder_name in os.listdir(wx_location):
@@ -100,7 +104,7 @@ def decrypt_db(contact_path, msg_path, user_path):
     try:
         merge_db(user_path)  # 合并数据库
     except Exception as e:
-        print(e)
+        print('非当前登录微信数据库,无法合并,自动跳过...')
 
 
 def read_all_files_in_directory(directory_path):
@@ -131,19 +135,19 @@ def merge_db(user_path):
     # 目标数据库文件
     target_database = f"db\\{user_path}\\MSG.db"
 
-    shutil.copy(f'db\\{user_path}\\MSG0.db', target_database)  # 使用一个数据库文件作为模板
-    merge_databases([item for item in source_databases if 'MicroMsg.db' not in item and 'MSG0.db' not in item], target_database)  # 合并数据库,列表推导式,排除MicroMsg.db文件
-    merge_table(f"db\\{user_path}\\MicroMsg.db", target_database, ['Contact', 'ChatRoom'])  # 将两个库文件成一个文件
-    print(source_databases)
+    shutil.copy(f'db\\{user_path}\\MSG0.db', target_database)  # 使用MSG0.db数据库文件作为模板
+    merge_databases([item for item in source_databases if 'MicroMsg.db' not in item and 'MSG0.db' not in item],
+                    target_database)  # 合并数据库,列表推导式,排除MicroMsg.db、MSG0.db文件
+    merge_table(f"db\\{user_path}\\MicroMsg.db", target_database, ['Contact', 'ChatRoom'])  # 将两个库文的表合成一个文件
     remove_db(source_databases)  # 删除文件
 
 
 def remove_db(file_paths):
     for file_path in file_paths:
-        print(f"正在删除 {file_path}...")
+        print(f"正在清理 {file_path}...")
         try:
             os.remove(file_path)
-            print(f"{file_path} 已被成功删除。")
+            print(f"{file_path} 已清理。")
         except FileNotFoundError:
             print(f"错误：文件 {file_path} 未找到。")
         except PermissionError:
@@ -152,18 +156,68 @@ def remove_db(file_paths):
             print(f"删除文件时发生错误：{e}")
 
 
-check_key()  # 检查存放key文件是否存在
-get_key()  # 获取key
-get_path_decrypt_merge()  # 自动获取路径，解密，合并数据库
+def remove_dir(dir_paths):
+    for dir_path in dir_paths:
+        print(f"正在清理 {dir_path}...")
+        try:
+            shutil.rmtree(dir_path)
+            print(f"{dir_path} 已清理。")
+        except FileNotFoundError:
+            print(f"错误：目录 {dir_path} 未找到。")
+        except PermissionError:
+            print(f"错误：没有足够的权限删除 {dir_path}。")
+        except Exception as e:
+            print(f"删除目录时发生错误：{e}")
 
-# 导出为excel
-wxids = get_wxid()
-for wx in wxids:
-    try:
-        all_data = get_data(wx)
-    except Exception as e:
-        print(e)
-        continue
-    deal_over_data = deal_data(all_data, wx)
-    write_excel(deal_over_data, wx)
 
+if __name__ == '__main__':
+    check_key()  # 检查存放key文件是否存在
+    get_key()  # 获取key
+    get_path_decrypt_merge()  # 自动获取路径，解密，合并数据库
+
+    while True:
+        is_file = input('是否复制本地文件到当前路径?[复制后可在excel中超链接打开文件](y/n)')
+        wxids = get_wxid()
+        if is_file == 'n':  # 不复制文件
+            # 导出为excel
+            for wx in wxids:  # 多个微信号,循环处理
+                try:
+                    all_data = get_data(wx)
+                except Exception as e:
+                    print('当前处理数据库非当前登录微信,跳过...')
+                    continue
+                deal_over_data = deal_data(all_data, wx)
+                write_excel(deal_over_data, wx)
+            break
+
+        elif is_file == 'y':  # 复制文件
+            for wx in wxids:  # 多个微信号,循环处理
+                try:
+                    all_data = get_data(wx)
+                except Exception as e:
+                    print('当前处理数据库非当前登录微信,跳过...')
+                    continue
+                print('正在复制本地文件到 .\\data\\files 目录下...')
+                for i in tqdm(range(len(all_data))):
+
+                    if all_data[i][8] == 49 and all_data[i][9] == 6:
+                        wx_location = os.path.join(get_wx_location(), wx)  # 已登录微信当前用户路径
+                        try:
+                            file_path = file(bytes(all_data[i][7]), bytes(all_data[i][10]), '.\\data\\files', wx,
+                                             wx_location)
+                            if file_path['file_path'] == '':
+                                all_data[i][3] = '文件未下载或已删除'
+                                continue
+                            all_data[i][3] = file_path['file_path']
+                        except Exception as e:
+                            all_data[i][3] = '文件解析失败'
+
+                deal_over_data = deal_data(all_data, wx)
+                write_excel(deal_over_data, wx)
+            break
+
+        else:
+            pass
+    remove_db(['.\\key.txt'])  # 删除db文件夹和key.txt文件
+    remove_dir(['.\\db'])
+    input('导出完成,按任意建关闭...')
