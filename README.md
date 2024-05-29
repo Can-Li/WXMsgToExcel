@@ -9,6 +9,13 @@
 
 如未安装python环境，可在release中下载打包后的版本。
 
+## 运行截图
+![1716970159073](https://github.com/Can-Li/WXMsgToExcel/assets/96718195/33d12e6e-05e9-470e-998c-38d8b7cacda0)
+
+## 效果截图
+![1716970526447](https://github.com/Can-Li/WXMsgToExcel/assets/96718195/a0e3503b-5418-44ea-9f6e-cd7148b402b5)
+
+
 ## 声明
 https://github.com/LC044/WeChatMsg/<br>
 https://github.com/SnowMeteors/GetWeChatKey<br>
