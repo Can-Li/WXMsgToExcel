@@ -12,7 +12,11 @@
 ## 运行截图
 ![1716970159073](https://github.com/Can-Li/WXMsgToExcel/assets/96718195/33d12e6e-05e9-470e-998c-38d8b7cacda0)
 
-## 效果截图
+## 导出效果截图
+![1717730941333](https://github.com/Can-Li/WXMsgToExcel/assets/96718195/6de6e116-68cf-4763-b733-2ad5126c4c81)
+
+
+## 超链接效果截图
 ![1716970526447](https://github.com/Can-Li/WXMsgToExcel/assets/96718195/a0e3503b-5418-44ea-9f6e-cd7148b402b5)
 
 
